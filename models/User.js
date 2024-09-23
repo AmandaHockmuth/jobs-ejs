@@ -40,3 +40,12 @@ UserSchema.methods.checkPassword = async function (candidatePassword) {
 };
 
 module.exports = mongoose.model("User", UserSchema);
+
+
+// Add team attribute to user registration
+//      - "Warning, your team cannot be changed later."
+//           if team exists add user to team
+//           if team does not exist create new team
+//           dialogue box warning "No team by that name found
+//               - create a new team?
+//               - try another spelling?"

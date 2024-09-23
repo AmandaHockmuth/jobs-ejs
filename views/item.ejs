@@ -1,0 +1,35 @@
+<%- include("partials/head.ejs") %>
+<%- include("partials/header.ejs") %>
+
+<form
+  method="POST"
+  action="<%- (item) ? 'http://localhost:3000/api/v1/items/update/' + item.id : 'http://localhost:3000/api/v1/items' %>">
+  <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+  <div>
+    <label for="title">Item Title:</label>
+    <input type="text" name="title" id="title" value="<%- (item && item.title) ? item.title : '' %>" />
+  </div>
+  <div>
+    <label for="value">Item Value:</label>
+    <input type="number" name="value" id="value" value="<%- (item && item.value) ? item.value : '' %>" />
+  </div>
+  <div>
+    <label for="status">Status:</label>
+    <select name="status" id="status">
+      <option value="unpaid" <%- (item && item.status === 'unpaid') ? 'selected' : '' %>>Unpaid</option>
+      <option value="pending" <%- (item && item.status === 'pending') ? 'selected' : '' %>>Pending</option>
+      <option value="paid" <%- (item && item.status === 'paid') ? 'selected' : '' %>>Paid</option>
+      <option value="declined" <%- (item && item.status === 'declined') ? 'selected' : '' %>>Declined</option>
+    </select>
+  </div>
+  <div>
+    <button>Submit</button>
+  </div>
+</form>
+<div>
+  <a href="/api/v1/items">
+    <button>Cancel</button>
+  </a>
+</div>
+
+<%- include("partials/footer.ejs") %>

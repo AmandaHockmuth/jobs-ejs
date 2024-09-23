@@ -1,9 +1,25 @@
 const express = require("express");
 require("express-async-errors");
-require("dotenv").config(); // to load the .env file into the process.env object
+require("dotenv").config();
+const cookieParser = require("cookie-parser");
+
+// EXTRA SECURITY PACKAGES
+const helmet = require("helmet");
+const xss = require("xss-clean");
+const rateLimiter = require("express-rate-limit");
 
 const app = express();
 
+app.use(
+  rateLimiter({
+    windowsMs: 15 * 60 * 1000, //15 minutes
+    max: 100, //limits each IP to 100 requests per windowsMs
+  })
+);
+app.use(helmet());
+app.use(xss());
+
+app.use(require("connect-flash")());
 app.set("view engine", "ejs");
 app.use(require("body-parser").urlencoded({ extended: true }));
 
@@ -34,27 +50,47 @@ if (app.get("env") === "production") {
 
 app.use(session(sessionParms));
 
+//CSRF Middleware
+
+const csrf = require("host-csrf");
+
+app.use(cookieParser(process.env.SESSION_SECRET));
+app.use(express.urlencoded({ extended: false }));
+let csrf_development_mode = true;
+if (app.get("env") === "production") {
+  csrf_development_mode = false;
+  app.set("trust proxy", 1);
+}
+const csrf_options = {
+  protected_operations: ["PATCH"],
+  protected_content_types: ["application/json"],
+  development_mode: csrf_development_mode,
+};
+const csrf_middleware = csrf(csrf_options); //initialize and return middleware
+
 //PASSPORT
 const passport = require("passport");
-const passportInit = require("./passport/passportInit");
+const passportInit = require("./passport/passportInit.js");
 
 passportInit();
 app.use(passport.initialize());
 app.use(passport.session());
 //
 
-app.use(require("connect-flash")());
-
-app.use(require("./middleware/storeLocals"));
-app.get("/", (req, res) => {
+app.use(require("./middleware/storeLocals.js"));
+app.get("/", csrf_middleware, (req, res) => {
   res.render("index");
 });
-app.use("/sessions", require("./routes/sessionRoutes"));
+app.use("/sessions", csrf_middleware, require("./routes/sessionRoutes.js"));
 
 // SECRET WORD HANDLING
-const secretWordRouter = require("./routes/secretWord");
-const auth = require("./middleware/auth");
-app.use("/secretWord", auth, secretWordRouter);
+const secretWordRouter = require("./routes/secretWord.js");
+const auth = require("./middleware/auth.js");
+app.use("/secretWord", auth, csrf_middleware, secretWordRouter);
+
+//ITEMS ROUTING
+const itemsRouter = require("./routes/items.js");
+app.use("/api/v1/items", auth, csrf_middleware, itemsRouter);
 //
 
 app.use((req, res) => {
@@ -69,7 +105,7 @@ app.use((err, req, res, next) => {
 const port = process.env.PORT || 3000;
 
 const start = async () => {
-  await require("./db/connect")(process.env.MONGO_URI);
+  await require("./db/connect.js")(process.env.MONGO_URI);
   try {
     app.listen(port, () =>
       console.log(`Server is listening on port ${port}...`)

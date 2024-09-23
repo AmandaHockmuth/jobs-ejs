@@ -3,7 +3,7 @@ const router = express.Router();
 
 router.get("/", (req, res) => {
   if (!req.session.secretWord) {
-    req.session.secretWord = "syzygy";
+    req.session.secretWord = "None Set.";
   }
 
   res.render("secretWord", { secretWord: req.session.secretWord });
