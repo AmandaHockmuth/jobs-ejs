@@ -1,0 +1,10 @@
+<%- include("partials/head.ejs") %>
+<%- include("partials/header.ejs") %>
+<% if (user) { %>
+    <p>Click this <a href="/api/v1/items">link</a> to view/change Budget Items.</p>
+    <p>Click this <a href="/secretWord">link</a> to view/change the Secret Word.</p>
+<% } else { %>
+    <a href="/sessions/logon">Click this link to logon.</a>
+    <a href="/sessions/register">Click this link to register.</a>
+<% } %>
+<%- include("partials/footer.ejs") %>

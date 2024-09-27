@@ -1,0 +1,33 @@
+<%- include("partials/head.ejs") %>
+<%- include("partials/header.ejs") %>
+<h2>Budget Items List</h2>
+<table id="items-table">
+  <tr id="items-table-header">
+    <th>Title</th>
+    <th>Value</th>
+    <th>Status</th>
+    <th colspan="2"></th>
+  </tr>
+  <% if (items && items.length) { %>
+    <% items.forEach((item) => { %>
+      <tr>
+        <td><%= item.title %></td>
+        <td><%= item.value %></td>
+        <td><%= item.status %></td>
+        <td><form method="GET" action="/api/v1/items/edit/<%= item.id %>" style="display: inline">
+            <button>Edit</button>
+            <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+        </form></td>
+        <td><form method="POST" action="/api/v1/items/delete/<%= item.id %>" style="display: inline">
+            <button>Delete</button>
+            <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+          </form>
+        </td>
+      </tr>
+    <% }) %>
+  <% } else {%>
+  <% }%>
+</table>
+<a href="/api/v1/items/new"><button type="button">Add Item</button></a>
+<a href="/"><button type="button">Go Home</button></a>
+<%- include("partials/footer.ejs") %>

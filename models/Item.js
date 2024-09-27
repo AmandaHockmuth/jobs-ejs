@@ -19,10 +19,12 @@ const ItemSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Types.ObjectId,
       ref: "User",
-      required: [true, "Please provide user."],
+      required: [true],
     },
   },
   { timestamps: true }
 );
 
 module.exports = mongoose.model("Item", ItemSchema);
+
+// Add team attribute - pass in user's team

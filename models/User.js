@@ -1,7 +1,6 @@
 require("dotenv");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -35,19 +34,18 @@ UserSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-UserSchema.methods.createJWT = function () {
-  return jwt.sign(
-    { userId: this._id, name: this.name },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_LIFETIME,
-    }
-  );
-};
-
 UserSchema.methods.checkPassword = async function (candidatePassword) {
   const isMatch = await bcrypt.compare(candidatePassword, this.password);
   return isMatch;
 };
 
 module.exports = mongoose.model("User", UserSchema);
+
+
+// Add team attribute to user registration
+//      - "Warning, your team cannot be changed later."
+//           if team exists add user to team
+//           if team does not exist create new team
+//           dialogue box warning "No team by that name found
+//               - create a new team?
+//               - try another spelling?"
