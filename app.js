@@ -3,6 +3,13 @@ require("express-async-errors");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
 
+// TESTING ENVIRONMENT
+let mongoURL = process.env.MONGO_URI;
+if (process.env.NODE_ENV == "test") {
+  console.log("------!!!TESTING ENVIRONMENT ACTIVE!!!------");
+  mongoURL = process.env.MONGO_URI_TEST;
+}
+
 // EXTRA SECURITY PACKAGES
 const helmet = require("helmet");
 const xss = require("xss-clean");
@@ -23,12 +30,12 @@ app.use(require("connect-flash")());
 app.set("view engine", "ejs");
 app.use(require("body-parser").urlencoded({ extended: true }));
 
+// MONGO/SESSION
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
-const url = process.env.MONGO_URI;
 
 const store = new MongoDBStore({
-  uri: url,
+  uri: mongoURL,
   collection: "mySessions",
 });
 store.on("error", function (error) {
@@ -50,7 +57,7 @@ if (app.get("env") === "production") {
 
 app.use(session(sessionParms));
 
-//CSRF Middleware
+// CSRF Middleware
 
 const csrf = require("host-csrf");
 
@@ -68,7 +75,17 @@ const csrf_options = {
 };
 const csrf_middleware = csrf(csrf_options); //initialize and return middleware
 
-//PASSPORT
+// MULTIPLY MIDDLEWARE
+app.use((req, res, next) => {
+  if (req.path == "/multiply") {
+    res.set("Content-Type", "application/json");
+  } else {
+    res.set("Content-Type", "text/html");
+  }
+  next();
+});
+
+// PASSPORT
 const passport = require("passport");
 const passportInit = require("./passport/passportInit.js");
 
@@ -93,6 +110,16 @@ const itemsRouter = require("./routes/items.js");
 app.use("/api/v1/items", auth, csrf_middleware, itemsRouter);
 //
 
+app.get("/multiply", (req, res) => {
+  const result = req.query.first * req.query.second;
+  if (result.isNaN) {
+    result = "NaN";
+  } else if (result == null) {
+    result = "null";
+  }
+  res.json({ result: result });
+});
+
 app.use((req, res) => {
   res.status(404).send(`That page (${req.url}) was not found.`);
 });
@@ -104,10 +131,10 @@ app.use((err, req, res, next) => {
 
 const port = process.env.PORT || 3000;
 
-const start = async () => {
-  await require("./db/connect.js")(process.env.MONGO_URI);
+const start = () => {
   try {
-    app.listen(port, () =>
+    require("./db/connect")(mongoURL);
+    return app.listen(port, () =>
       console.log(`Server is listening on port ${port}...`)
     );
   } catch (error) {
@@ -116,3 +143,5 @@ const start = async () => {
 };
 
 start();
+
+module.exports = { app };

@@ -18,10 +18,11 @@ const registerDo = async (req, res, next) => {
       parseVErr(e, req);
     } else if (e.name === "MongoServerError" && e.code === 11000) {
       req.flash("error", "That email address is already registered.");
+      return res.status(400).render("register", { errors: req.flash("error") });
     } else {
       return next(e);
     }
-    return res.render("register", { errors: req.flash("error")});
+    return res.render("register", { errors: req.flash("error") });
   }
 };
 

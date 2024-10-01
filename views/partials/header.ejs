@@ -6,6 +6,9 @@
    <button>Logoff</button>
    </form>
 <% } %>
+<% if (!user) { %>
+  <p>No User Active. Please Register or Logon.</p>
+<% } %>
 <% if (errors) {
     errors.forEach((err) => { %>
       <div>
